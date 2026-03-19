@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calradia Radar | Elite Console</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        background-color: #0d0d0f;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', sans-serif;
+        overflow-x: hidden;
+      }
+      .radar-container {
+        margin-top: 10px;
+        background: #16161a;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #2a2a2e;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      }
+      .header-title {
+        color: #ffc107;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-weight: 800;
+      }
+
+      /* Filtre Butonları */
+      .filter-btn {
+        border-radius: 8px;
+        padding: 6px 18px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: 1px solid #333;
+        color: #aaa;
+      }
+      .filter-btn:hover {
+        color: #fff;
+        background: #222;
+      }
+      .filter-btn.active {
+        color: #000;
+        opacity: 1;
+        border: none;
+      }
+      .btn-all.active {
+        background-color: #f8f9fa;
+      }
+      .btn-war.active {
+        background-color: #ff3b3b;
+        box-shadow: 0 0 15px rgba(255, 59, 59, 0.4);
+      }
+      .btn-trade.active {
+        background-color: #00d2ff;
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+      }
+      .btn-coll.active {
+        background-color: #adff2f;
+        box-shadow: 0 0 15px rgba(173, 255, 47, 0.4);
+      }
+
+      /* Satır Renkleri */
+      .row-saldırı {
+        background-color: rgba(255, 59, 59, 0.05) !important;
+        border-left: 4px solid #ff3b3b;
+      }
+      .row-ticaret {
+        border-left: 4px solid #00d2ff;
+      }
+      .row-toplama {
+        border-left: 4px solid #adff2f;
+      }
+
+      .badge-saldırı {
+        background: #ff3b3b;
+        color: #fff;
+      }
+      .badge-ticaret {
+        background: #00d2ff;
+        color: #000;
+      }
+      .badge-toplama {
+        background: #adff2f;
+        color: #000;
+      }
+
+      .timer-text {
+        font-family: 'Consolas', monospace;
+        font-size: 1.15rem;
+        color: #00ff00;
+      }
+      .timer-critical {
+        color: #ff3b3b;
+        font-weight: 900;
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .user-tag {
+        font-size: 0.75rem;
+        color: #666;
+        display: block;
+        margin-top: -2px;
+      }
+      .table thead th {
+        border-top: none;
+        color: #555;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid px-4 py-3">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="header-title m-0">
+            <i class="fas fa-microchip me-2"></i>LIVE RADAR v2
+          </h2>
+          <small class="text-muted" id="last-update"
+            >Sistem başlatılıyor...</small
+          >
+        </div>
+        <div class="d-flex gap-2">
+          <button
+            class="filter-btn btn-all active"
+            onclick="setFilter('HEPSİ', this)"
+          >
+            HEPSİ
+          </button>
+          <button
+            class="filter-btn btn-war"
+            onclick="setFilter('SALDIRI', this)"
+          >
+            SALDIRILAR
+          </button>
+          <button
+            class="filter-btn btn-trade"
+            onclick="setFilter('TİCARET', this)"
+          >
+            TİCARET
+          </button>
+          <button
+            class="filter-btn btn-coll"
+            onclick="setFilter('TOPLAMA', this)"
+          >
+            TOPLAMA
+          </button>
+        </div>
+      </div>
+
+      <div class="radar-container">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle m-0">
+            <thead>
+              <tr>
+                <th>Kategori</th>
+                <th>Kaynak / Hesap</th>
+                <th>Hedef Noktası</th>
+                <th>Yük / Ordu</th>
+                <th class="text-end">Kalan Süre</th>
+              </tr>
+            </thead>
+            <tbody id="radar-body">
+              <tr>
+                <td colspan="5" class="text-center py-5">
+                  Veri akışı bekleniyor...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentFilter = 'HEPSİ';
+      let radarData = [];
+
+      function setFilter(type, element) {
+        currentFilter = type;
+        document
+          .querySelectorAll('.filter-btn')
+          .forEach((btn) => btn.classList.remove('active'));
+        element.classList.add('active');
+        renderTable();
+      }
+
+      function updateRadar() {
+        fetch('/api/moves')
+          .then((res) => res.json())
+          .then((data) => {
+            radarData = data;
+            renderTable();
+            document.getElementById('last-update').innerText =
+              'SON SENK: ' + new Date().toLocaleTimeString();
+          });
+      }
+
+      function parseGameDate(dateStr) {
+        if (!dateStr) return null;
+        const parts = dateStr.split(' ');
+        const d = parts[0].split('.');
+        const t = parts[1].split(':');
+        return new Date(
+          d[2],
+          d[1] - 1,
+          d[0],
+          t[0],
+          t[1],
+          t[2].split('.')[0],
+        ).getTime();
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById('radar-body');
+        let filtered =
+          currentFilter === 'HEPSİ'
+            ? radarData
+            : radarData.filter((m) =>
+                m.tip.toUpperCase().includes(currentFilter),
+              );
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">${currentFilter} kategorisinde hareket yok.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map((m) => {
+            const typeKey = m.tip.includes('SALDIRI')
+              ? 'saldırı'
+              : m.tip.includes('TİCARET')
+                ? 'ticaret'
+                : 'toplama';
+            const targetTS = parseGameDate(m.varis);
+
+            return `
+                    <tr class="row-${typeKey}">
+                        <td><span class="badge badge-${typeKey} px-3 py-2 w-100">${m.tip}</span></td>
+                        <td>
+                            <div class="fw-bold text-white">${m.gonderen}</div>
+                            <div class="user-tag">@${m.kullanici_adi || 'gizli_user'}</div>
+                        </td>
+                        <td><i class="fas fa-caret-right text-muted me-2"></i>${m.hedef}</td>
+                        <td class="small text-info">${m.miktar}</td>
+                        <td class="text-end timer-text" data-target="${targetTS}">--:--:--</td>
+                    </tr>`;
+          })
+          .join('');
+      }
+
+      // Countdown Motoru (Saniyede 1 kez çalışır)
+      setInterval(() => {
+        const now = new Date().getTime();
+        document.querySelectorAll('.timer-text').forEach((cell) => {
+          const target = parseInt(cell.getAttribute('data-target'));
+          if (!target) return;
+
+          const diff = target - now;
+          if (diff <= 0) {
+            cell.innerHTML = 'TAMAMLANDI';
+            cell.style.color = '#555';
+          } else {
+            const h = Math.floor(diff / 3600000)
+              .toString()
+              .padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000)
+              .toString()
+              .padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000)
+              .toString()
+              .padStart(2, '0');
+
+            cell.innerHTML = `${h}:${m}:${s}`;
+
+            // 3 dakikadan az kaldıysa (180.000 ms) kırmızı yap
+            if (diff < 180000) {
+              cell.classList.add('timer-critical');
+            } else {
+              cell.classList.remove('timer-critical');
+            }
+          }
+        });
+      }, 1000);
+
+      setInterval(updateRadar, 3000);
+      updateRadar();
+    </script>
+  </body>
+</html>
