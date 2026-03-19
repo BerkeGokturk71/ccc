@@ -40,10 +40,10 @@ headers = {"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"}
 
 def login():
     print("🔑 LOGIN işlemleri başlatılıyor...")
-    session.post(f"{BASE_URL}/app/ajax/giris/login.php", data={"kadi": KADI, "sifre": SIFRE}, headers=headers)
-    session.post(f"{BASE_URL}/app/ajax/giris/sw_sec.php", data={"sw_url": SERVER}, headers=headers)
+    session.post(f"{BASE_URL}/app/ajax/giris/login.php", data={"kadi": KADI, "sifre": SIFRE}, headers=headers,verify=False)
+    session.post(f"{BASE_URL}/app/ajax/giris/sw_sec.php", data={"sw_url": SERVER}, headers=headers,verify=False)
     session.get(f"{BASE_URL}/sunucular", headers=headers)
-    session.post(f"{BASE_URL}/app/ajax/kullanici.php", data={"sayfa_yeri": "oyun"}, headers=headers)
+    session.post(f"{BASE_URL}/app/ajax/kullanici.php", data={"sayfa_yeri": "oyun"}, headers=headers,verify=False)
     print("✅ LOGIN tamamlandı.")
 
 # --- TAZELEME MOTORU (YENİ EKLEDİĞİMİZ KISIM) ---
