@@ -36,7 +36,13 @@ gonderilen_bildirimler = []
 # --- SESSION VE LOGIN ---
 session = requests.Session()
 session.verify = False
-headers = {"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"}
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "X-Requested-With": "XMLHttpRequest",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Origin": BASE_URL,
+    "Referer": f"{BASE_URL}/oyun/{SERVER}"
+}
 
 def login():
     print("🔑 LOGIN işlemleri başlatılıyor...")
