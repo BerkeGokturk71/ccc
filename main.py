@@ -1,12 +1,22 @@
-import os
-from flask import Flask
+import threading
+import time
 
-app = Flask(__name__)
+from socket_engine import start_socket_engine
+from web_app import run_flask
 
-def run_flask():
-    # BURASI KRİTİK: Koyeb portu "PORT" değişkeniyle yollar.
-    # Eğer 5000 yazarsan Koyeb "kapı kapalı" der ve uygulamayı kapatır.
-    port = int(os.environ.get("PORT", 8000))
+
+if __name__ == "__main__":
+    # 1. Arka planda Socket'i başlat
+    socket_thread = threading.Thread(target=start_socket_engine, daemon=True)
+    socket_thread.start()
+
+    # 2. Flask'ı başlat
+    print("🌐 Flask sunucusu başlatılıyor...")
+    try:
+        run_flask()
+    except Exception as e:
+        print(f"❌ Flask başlatılamadı: {e}")
     
-    # host mutlaka '0.0.0.0' olmalı. 'localhost' dersen dışarıya kapanır.
-    app.run(host='0.0.0.0', port=port)
+    # Flask kapansa bile (Code 0 almamak için) ana thread'i canlı tut
+    while True:
+        time.sleep(10)
