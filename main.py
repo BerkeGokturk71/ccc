@@ -1,12 +1,12 @@
 import os
-import threading
+from flask import Flask
 
-from flask import app
-from socket_engine import start_socket_engine
-from web_app import run_flask
+app = Flask(__name__)
 
-if __name__ == "__main__":
-   def run_flask():
-    # Koyeb'in verdiği portu al, yoksa 8000 kullan
-    port = int(os.environ.get("PORT", 8000)) 
+def run_flask():
+    # BURASI KRİTİK: Koyeb portu "PORT" değişkeniyle yollar.
+    # Eğer 5000 yazarsan Koyeb "kapı kapalı" der ve uygulamayı kapatır.
+    port = int(os.environ.get("PORT", 8000))
+    
+    # host mutlaka '0.0.0.0' olmalı. 'localhost' dersen dışarıya kapanır.
     app.run(host='0.0.0.0', port=port)
