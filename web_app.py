@@ -16,6 +16,7 @@ def get_moves():
     return jsonify(database.get_moves())
 
 def run_flask():
-    # Render'ın verdiği portu al, yoksa 5000 kullan
-    port = int(os.environ.get("PORT", 5000))
+    # Koyeb'in atadığı dinamik portu alıyoruz
+    port = int(os.environ.get("PORT", 8000))
+    # host mutlaka '0.0.0.0' olmalı, aksi halde Koyeb dışarıdan erişemez
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
